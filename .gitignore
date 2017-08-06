@@ -1,0 +1,12 @@
+### Ignore Unreal Project Files ###
+##################################
+*/Build
+*/Binaries
+*/DerivedDataCache
+*/Intermediate
+*/Saved
+BuildingEscape/Content/StarterContent/
+### Ignore Visual Studio Files ###
+##################################
+*.VC.opendb
+BuildingEscape/BuildingEscape.sdf
