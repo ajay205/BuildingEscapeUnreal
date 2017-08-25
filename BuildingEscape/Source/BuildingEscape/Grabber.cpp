@@ -23,8 +23,18 @@ void UGrabber::BeginPlay()
 	Super::BeginPlay();
 
 	FString ObjectName = GetOwner()->GetName();
-	FString ObjPos = GetOwner()->GetTransform().GetLocation().ToString();
-	UE_LOG(LogTemp, Warning, TEXT("%s Grabber Position report at %s"), *ObjectName, *ObjPos);
+	//FString ObjPos = GetOwner()->GetTransform().GetLocation().ToString();
+	//UE_LOG(LogTemp, Warning, TEXT("%s Grabber Position report at %s"), *ObjectName, *ObjPos);
+
+	PhysicsHandle = GetOwner()->FindComponentByClass<UPhysicsHandleComponent>();
+	if (PhysicsHandle)
+	{
+		//physics component found
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s Missing physics handle component."), *ObjectName);
+	}
 	
 }
 
