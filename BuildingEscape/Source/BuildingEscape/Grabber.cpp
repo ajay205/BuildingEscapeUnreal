@@ -64,17 +64,50 @@ void UGrabber::FindPhysicsHandleComponent()
 void UGrabber::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	FVector PlayerLocation;
+	FRotator PlayerRotator;
+	FString ObjectName = GetOwner()->GetName();
+	GetWorld()->GetFirstPlayerController()->GetPlayerViewPoint(OUT PlayerLocation, OUT PlayerRotator);
+
+	float Reach = 100.0f;
+	FVector LineTracEnd = PlayerLocation + PlayerRotator.Vector() * Reach;
+
+	if (PhysicsHandle->GrabbedComponent)
+	{
+		PhysicsHandle->SetTargetLocation(LineTracEnd);
+	}
+
 }
 
 void UGrabber::Grab()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Grab key pressed."));
-	GetFirstPhysicsBodyInReach();
+	auto HitResult = GetFirstPhysicsBodyInReach();
+	auto ComponentToGrab = HitResult.GetComponent();
+
+	AActor* ActorHit = HitResult.GetActor();
+	if (ActorHit)
+	{
+		//PhysicsHandle->GrabComponent(
+		//	ComponentToGrab,
+		//	NAME_None,
+		//	ComponentToGrab->GetOwner()->GetActorLocation(),
+		//	true
+		//	);
+		PhysicsHandle->GrabComponentAtLocationWithRotation(
+			ComponentToGrab,
+			NAME_None,
+			ComponentToGrab->GetOwner()->GetActorLocation(),
+			ComponentToGrab->GetOwner()->GetActorRotation()
+			);
+	}
 }
 
 void UGrabber::Release()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Released key."));
+	PhysicsHandle->ReleaseComponent();
 }
 
 const FHitResult UGrabber::GetFirstPhysicsBodyInReach()
