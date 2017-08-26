@@ -28,8 +28,8 @@ public:
 
 private:
 	UPhysicsHandleComponent* PhysicsHandle = nullptr;
-
 	UInputComponent* InputComponent = nullptr;
+	float Reach = 100.0f;
 
 	void Grab();
 	void Release();
@@ -37,5 +37,7 @@ private:
 	void FindPhysicsHandleComponent();
 
 	const FHitResult GetFirstPhysicsBodyInReach();
+	FVector GetReachLineStart();
+	FVector GetReachLineEnd();
 	
 };

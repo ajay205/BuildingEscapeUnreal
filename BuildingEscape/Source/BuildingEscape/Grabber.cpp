@@ -13,7 +13,6 @@ UGrabber::UGrabber()
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
 
-	// ...
 }
 
 
@@ -21,14 +20,8 @@ UGrabber::UGrabber()
 void UGrabber::BeginPlay()
 {
 	Super::BeginPlay();
-
-	//FString ObjectName = GetOwner()->GetName();
-	//FString ObjPos = GetOwner()->GetTransform().GetLocation().ToString();
-	//UE_LOG(LogTemp, Warning, TEXT("%s Grabber Position report at %s"), *ObjectName, *ObjPos);
-
 	FindPhysicsHandleComponent();
 	SetupInputComponent();
-	
 }
 
 void UGrabber::SetupInputComponent()
@@ -36,7 +29,6 @@ void UGrabber::SetupInputComponent()
 	InputComponent = GetOwner()->FindComponentByClass<UInputComponent>();
 	if (InputComponent)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Input component found."));
 		InputComponent->BindAction("Grab", IE_Pressed, this, &UGrabber::Grab);
 		InputComponent->BindAction("Grab", IE_Released, this, &UGrabber::Release);
 	}
@@ -49,11 +41,7 @@ void UGrabber::SetupInputComponent()
 void UGrabber::FindPhysicsHandleComponent()
 {
 	PhysicsHandle = GetOwner()->FindComponentByClass<UPhysicsHandleComponent>();
-	if (PhysicsHandle)
-	{
-		//physics component found
-	}
-	else
+	if (PhysicsHandle == nullptr)
 	{
 		UE_LOG(LogTemp, Error, TEXT("%s Missing physics handle component."), *GetOwner()->GetName());
 	}
@@ -65,85 +53,65 @@ void UGrabber::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompone
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	FVector PlayerLocation;
-	FRotator PlayerRotator;
-	FString ObjectName = GetOwner()->GetName();
-	GetWorld()->GetFirstPlayerController()->GetPlayerViewPoint(OUT PlayerLocation, OUT PlayerRotator);
-
-	float Reach = 100.0f;
-	FVector LineTracEnd = PlayerLocation + PlayerRotator.Vector() * Reach;
-
 	if (PhysicsHandle->GrabbedComponent)
 	{
-		PhysicsHandle->SetTargetLocation(LineTracEnd);
+		PhysicsHandle->SetTargetLocation(GetReachLineEnd());
 	}
 
 }
 
 void UGrabber::Grab()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Grab key pressed."));
 	auto HitResult = GetFirstPhysicsBodyInReach();
 	auto ComponentToGrab = HitResult.GetComponent();
-
 	AActor* ActorHit = HitResult.GetActor();
 	if (ActorHit)
 	{
-		//PhysicsHandle->GrabComponent(
-		//	ComponentToGrab,
-		//	NAME_None,
-		//	ComponentToGrab->GetOwner()->GetActorLocation(),
-		//	true
-		//	);
 		PhysicsHandle->GrabComponentAtLocationWithRotation(
 			ComponentToGrab,
 			NAME_None,
 			ComponentToGrab->GetOwner()->GetActorLocation(),
 			ComponentToGrab->GetOwner()->GetActorRotation()
-			);
+		);
 	}
 }
 
 void UGrabber::Release()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Released key."));
 	PhysicsHandle->ReleaseComponent();
 }
 
 const FHitResult UGrabber::GetFirstPhysicsBodyInReach()
 {
+	FHitResult HitResult;
+	FCollisionQueryParams TraceParameters(FName(TEXT("")), false, GetOwner());
+
+	GetWorld()->LineTraceSingleByObjectType
+		(
+			OUT HitResult,
+			GetReachLineStart(),
+			GetReachLineEnd(),
+			FCollisionObjectQueryParams(ECollisionChannel::ECC_PhysicsBody),
+			TraceParameters
+			);
+
+	return HitResult;
+}
+
+FVector UGrabber::GetReachLineStart() {
 	FVector PlayerLocation;
 	FRotator PlayerRotator;
 	FString ObjectName = GetOwner()->GetName();
 	GetWorld()->GetFirstPlayerController()->GetPlayerViewPoint(OUT PlayerLocation, OUT PlayerRotator);
 
-	float Reach = 100.0f;
-	FVector LineTracEnd = PlayerLocation + PlayerRotator.Vector() * Reach;
+	return PlayerLocation;
+}
 
-	/*DrawDebugLine(
-		GetWorld(),
-		PlayerLocation,
-		LineTracEnd,
-		FColor(255, 0, 0),
-		false, -1, 0,
-		20.0f
-		);*/
+FVector UGrabber::GetReachLineEnd() {
+	FVector PlayerLocation;
+	FRotator PlayerRotator;
+	FString ObjectName = GetOwner()->GetName();
+	GetWorld()->GetFirstPlayerController()->GetPlayerViewPoint(OUT PlayerLocation, OUT PlayerRotator);
 
-	FHitResult Hit;
-	FCollisionQueryParams TraceParameters(FName(TEXT("")), false, GetOwner());
-
-	GetWorld()->LineTraceSingleByObjectType
-		(
-			OUT Hit,
-			PlayerLocation,
-			LineTracEnd,
-			FCollisionObjectQueryParams(ECollisionChannel::ECC_PhysicsBody),
-			TraceParameters
-			);
-
-	AActor* ActorHit = Hit.GetActor();
-	if (ActorHit)
-		UE_LOG(LogTemp, Warning, TEXT(" Grabber hit at %s"), *(ActorHit->GetName()));
-
-	return Hit;
+	return PlayerLocation + PlayerRotator.Vector() * Reach;
 }
