@@ -43,4 +43,6 @@ public:
 
 	AActor* Owner;
 
+	float GetTotalMassOfActorsOnPlate();
+
 };
