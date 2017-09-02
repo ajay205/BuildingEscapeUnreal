@@ -20,16 +20,18 @@ void UOpenDoor::BeginPlay()
 {
 	Super::BeginPlay();
 	Owner = GetOwner();
-
+	if (!PressurePlate)
+		UE_LOG(LogTemp, Error, TEXT("%s Missing PressurePlate."), *GetOwner()->GetName());
 }
 
 void UOpenDoor::OpenDoor()
 {
 	FRotator NewRotation = FRotator(0.0f, -140.0f, 0.0f);
-	if(Owner)
-		Owner->SetActorRotation(NewRotation);
-	if(!PressurePlate)
-		UE_LOG(LogTemp, Error, TEXT("%s Missing PressurePlate."), *GetOwner()->GetName());
+	//if(Owner)
+		//Owner->SetActorRotation(NewRotation);
+
+	OnOpenRequest.Broadcast();
+
 }
 
 void UOpenDoor::CloseDoor()
